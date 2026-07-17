@@ -29,6 +29,8 @@
     bossBar: document.getElementById('boss-bar'), bossName: document.getElementById('boss-name'), bossHpFill: document.getElementById('boss-hp-fill'), bossIntro: document.getElementById('boss-intro'),
     screenHome: document.getElementById('screen-home'), screenBattle: document.getElementById('screen-battle'), screenResult: document.getElementById('screen-result'),
     enterBattle: document.getElementById('enter-battle'), battleExit: document.getElementById('battle-exit'), battleStageLabel: document.getElementById('battle-stage-label'),
+    battleAllyList: document.getElementById('battle-ally-list'), battleAllyCount: document.getElementById('battle-ally-count'), battleTeamTrait: document.getElementById('battle-team-trait'), battleObjective: document.getElementById('battle-objective'),
+    battleEnemyCount: document.getElementById('battle-enemy-count'), battleEnemySummary: document.getElementById('battle-enemy-summary'),
     auto: document.getElementById('auto-turn'), speed: document.getElementById('battle-speed'), endTurn: document.getElementById('end-turn')
   };
 
@@ -730,7 +732,7 @@
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) fragment.appendChild(cell(x, y));
     dom.board.innerHTML = ''; dom.board.appendChild(fragment);
     renderMinimap();
-    renderParty(); renderTrait(); renderDetail(); renderTurnOrder(); renderBossBar();
+    renderParty(); renderTrait(); renderBattleSides(); renderDetail(); renderTurnOrder(); renderBossBar();
     dom.banner.textContent = state.over ? '戰鬥結束' : state.phase === 'deploy' ? '部署階段' : '第 ' + state.round + ' 回合｜' + (state.phase === 'player' ? '我方行動' : '敵方行動');
     dom.roundStatus.textContent = state.over ? '結算完成' : state.phase === 'deploy' ? '自由部署' : state.phase === 'player' ? '我方回合' : '敵方回合';
     dom.endTurn.textContent = state.phase === 'deploy' ? '⚔️ 開始戰鬥' : '結束本回合';
@@ -754,6 +756,36 @@
       card.innerHTML = '<div class="party-name">' + unit.p.name + (unitSize(unit) > 1 ? ' ⬛2×2' : '') + '</div><div class="party-meta">' + unit.p.roleLabel + '｜★' + progression.starOf(unit.id) + '｜融合 ' + (progress.fusion[unit.id] || 0) + '</div><div class="hpbar"><i style="width:' + (100 * unit.hp / unit.maxHp) + '%"></i></div>';
       card.onclick = function () { if ((state.phase === 'player' || state.phase === 'deploy') && !state.over && !state.animating) { state.selected = unit.key; state.mode = 'move'; render(); focusUnit(unit, false); } }; dom.list.appendChild(card);
     });
+  }
+  function renderBattleSides() {
+    if (!dom.battleAllyList) return;
+    var allies = state.units.filter(function (unit) { return unit.team === 'ally'; });
+    var livingAllies = allies.filter(function (unit) { return unit.hp > 0; });
+    var enemies = state.units.filter(function (unit) { return unit.team === 'enemy'; });
+    var livingEnemies = enemies.filter(function (unit) { return unit.hp > 0; });
+    dom.battleAllyCount.textContent = livingAllies.length + ' / ' + allies.length;
+    dom.battleEnemyCount.textContent = livingEnemies.length + ' / ' + enemies.length;
+    dom.battleObjective.textContent = '目標｜' + currentStage.objective;
+    var trait = traitFor('ally');
+    dom.battleTeamTrait.innerHTML = '<b>✦ ' + trait.label + '</b><span>' + trait.copy + '</span>';
+    dom.battleAllyList.innerHTML = '';
+    allies.forEach(function (unit) {
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'battle-roster-card' + (state.selected === unit.key ? ' selected' : '') + (unit.hp <= 0 ? ' defeated' : '') + (unit.acted ? ' acted' : '');
+      card.innerHTML = '<i style="background-image:url(\'' + portrait(unit) + '\')"></i><span><b>' + unit.p.name + '</b><small>' + unit.p.roleLabel + (unitSize(unit) > 1 ? '｜' + unitSize(unit) + '×' + unitSize(unit) : '') + '</small><em><u style="width:' + (100 * unit.hp / unit.maxHp) + '%"></u></em></span>';
+      card.setAttribute('aria-label', unit.p.name + '，生命 ' + unit.hp + ' / ' + unit.maxHp + '，點擊置中');
+      card.onclick = function () {
+        if (cameraSuppressed() || unit.hp <= 0) return;
+        if ((state.phase === 'player' || state.phase === 'deploy') && !state.over && !state.animating) { state.selected = unit.key; state.mode = 'move'; state.skill = 0; render(); }
+        focusUnit(unit, false);
+      };
+      dom.battleAllyList.appendChild(card);
+    });
+    var boss = livingEnemies.find(function (unit) { return unit.boss; });
+    if (boss) dom.battleEnemySummary.textContent = '首領 ' + boss.p.name + '｜生命 ' + boss.hp + ' / ' + boss.maxHp;
+    else if (livingEnemies.length) dom.battleEnemySummary.textContent = '剩餘 ' + livingEnemies.length + ' 隻｜點選敵軍可置中並查看威脅範圍';
+    else dom.battleEnemySummary.textContent = '敵軍已全數擊破';
   }
   function renderTrait() { var trait = traitFor('ally'); dom.teamTrait.innerHTML = '<b>✦ ' + trait.label + '</b><span>' + trait.copy + '</span>'; }
   function renderTurnOrder() {
