@@ -2,9 +2,9 @@
 (function () {
   'use strict';
 
-  var COLS = 20, ROWS = 20, HARD_ROUND_LIMIT = 45, PARTY_SIZE = 10, AGGRO_RANGE = 7;
+  var COLS = 25, ROWS = 25, HARD_ROUND_LIMIT = 45, PARTY_SIZE = 10, AGGRO_RANGE = 7;
   /* 布陣空間預設 5×5：大型（2×2）幻獸佔 4 格，天然限制大型單位的出戰數量。 */
-  var DEPLOY_MIN_X = 1, DEPLOY_MAX_X = 6, DEPLOY_MIN_Y = 13, DEPLOY_MAX_Y = 18;
+  var DEPLOY_MIN_X = 1, DEPLOY_MAX_X = 6, DEPLOY_MIN_Y = 18, DEPLOY_MAX_Y = 23;
   var content = window.TACTICAL_CONTENT;
   var profiles = window.TACTICAL_PET_DATA.concat(window.TACTICAL_ENEMY_DATA || []);
   var progression = new window.TacticalProgression({ profiles: window.TACTICAL_PET_DATA, content: content });
@@ -24,6 +24,7 @@
     questSummary: document.getElementById('quest-summary'), deployModal: document.getElementById('deploy-modal'), deployGrid: document.getElementById('deploy-grid'), deployHelp: document.getElementById('deploy-help'),
     campaignModal: document.getElementById('campaign-modal'), campaignGrid: document.getElementById('campaign-grid'), growthModal: document.getElementById('growth-modal'),
     growthPet: document.getElementById('growth-pet'), growthFeedback: document.getElementById('growth-feedback'), growthContent: document.getElementById('growth-content'), questList: document.getElementById('quest-list'),
+    growthConfirmModal: document.getElementById('growth-confirm-modal'), growthConfirmTitle: document.getElementById('growth-confirm-title'), growthConfirmCopy: document.getElementById('growth-confirm-copy'), growthConfirmMaterials: document.getElementById('growth-confirm-materials'), growthConfirmEffect: document.getElementById('growth-confirm-effect'), growthConfirmAccept: document.getElementById('growth-confirm-accept'),
     resultIcon: document.getElementById('result-icon'), resultStage: document.getElementById('result-stage'),
     resultTitle: document.getElementById('result-title'), resultCopy: document.getElementById('result-copy'), resultStats: document.getElementById('result-stats'), resultRewards: document.getElementById('result-rewards'),
     bossBar: document.getElementById('boss-bar'), bossName: document.getElementById('boss-name'), bossHpFill: document.getElementById('boss-hp-fill'), bossIntro: document.getElementById('boss-intro'),
@@ -208,6 +209,7 @@
     });
     dom.board.style.gridTemplateColumns = 'repeat(' + COLS + ', var(--cell))';
     dom.board.style.gridTemplateRows = 'repeat(' + ROWS + ', var(--cell))';
+    dom.board.dataset.mapKind = content.mapLayout ? content.mapLayout(currentStage) : currentStage.mapId;
     document.body.className = 'map-' + mapData().theme + ' view-' + currentView;
     note('部署階段：點選我方幻獸，再點左下角藍色部署格（6×6）調整站位，完成後按「開始戰鬥」。敵軍共 ' + roster.length + ' 隻分小隊散布全圖。' +
       (benched.length ? '⚠ 布陣空間不足，候補未出戰：' + benched.join('、') + '。' : ''));
@@ -677,8 +679,9 @@
     if (tile) {
       var terrainCopy = tile === 'fire' ? '熔岩：火系增傷，非火系每回合受傷' : tile === 'forest' ? '森林：森林系防禦與治療提升' : '水域：海洋系移動與傷害提升';
       var terrainGlyph = tile === 'fire' ? '♨' : tile === 'forest' ? '♣' : '≈';
+      var terrainLabel = tile === 'fire' ? '火' : tile === 'forest' ? '森' : '水';
       element.classList.add('terrain-' + tile); element.title = terrainCopy;
-      element.innerHTML = (x * 3 + y * 5 + currentStage.seed) % 11 === 0 ? '<span class="terrain-hint terrain-hint-' + tile + '" aria-hidden="true">' + terrainGlyph + '</span>' : '';
+      element.innerHTML = '<span class="terrain-hint terrain-hint-' + tile + '" aria-hidden="true">' + terrainLabel + '</span>';
     }
     else element.innerHTML = '';
     if (state.phase === 'deploy' && inDeployZone(x, y) && !unit) element.classList.add('deploy-zone');
@@ -1110,17 +1113,49 @@
     dom.growthPet.innerHTML = roster.map(function (pet) { return '<option value="' + pet.id + '"' + (pet.id === growthPetId ? ' selected' : '') + '>' + pet.name + '｜' + pet.roleLabel + '</option>'; }).join('');
     renderGrowth(); dom.growthModal.hidden = false; audio.play('ui');
   }
+  var pendingGrowthAction = null;
+  function growthMaterialsHtml(items) {
+    return items.map(function (item) {
+      var enough = item.owned >= item.cost, remaining = item.owned - item.cost;
+      return '<span class="growth-material ' + (enough ? 'enough' : 'short') + '"><i>' + item.icon + '</i><b>' + item.label + '</b><small>持有 ' + item.owned + '｜需求 ' + item.cost + '｜使用後 ' + (remaining >= 0 ? remaining : '缺 ' + Math.abs(remaining)) + '</small></span>';
+    }).join('');
+  }
+  function openGrowthConfirmation(config) {
+    pendingGrowthAction = config.ready ? config.onConfirm : null;
+    dom.growthConfirmTitle.textContent = config.title;
+    dom.growthConfirmCopy.textContent = config.copy;
+    dom.growthConfirmMaterials.innerHTML = growthMaterialsHtml(config.materials);
+    dom.growthConfirmEffect.innerHTML = '<b>執行後效果</b><span>' + config.effect + '</span>';
+    dom.growthConfirmAccept.disabled = !config.ready;
+    dom.growthConfirmAccept.textContent = config.ready ? '確認使用材料' : '材料不足，無法執行';
+    dom.growthConfirmModal.hidden = false; audio.play('ui');
+  }
+  function closeGrowthConfirmation() { dom.growthConfirmModal.hidden = true; pendingGrowthAction = null; }
   function renderGrowth() {
     var pet = window.TACTICAL_PET_DATA.find(function (entry) { return entry.id === growthPetId; }), fusion = progress.fusion[pet.id] || 0, stage = portraitStage(pet.id), points = progress.skillPoints[pet.id] || 0, essence = progress.essences[pet.element] || 0, nextStage = stage + 1, evolutionCost = progression.evolutionCost(nextStage);
     var star = progression.starOf(pet.id), starCost = progression.starCost(pet.id), copies = progress.copies[pet.id] || 0;
-    var starText = starCost
-      ? '⭐ 升 ' + starCost.nextStar + ' 星（複製體 ' + starCost.copies + '／🪙 ' + starCost.gold + '，持有複製體 ' + copies + '）'
-      : '⭐ 已達 9 星上限';
-    dom.growthContent.innerHTML = '<div class="growth-overview"><div class="growth-portrait" style="background-image:url(\'' + pet.evolution[stage - 1].portrait + '\')"></div><div><h3>' + pet.name + '｜' + pet.roleLabel + '　<span class="star-row">' + (star ? '★'.repeat(star) : '☆ 0 星') + '</span></h3><div class="growth-meta"><span>星級 ' + star + '/9（每星全能力 +10%）</span><span>進化 ' + stage + '/3</span><span>融合 ' + fusion + '/3</span><span>技能點 ' + points + '</span><span>元素精華 ' + essence + '</span></div><p>星級消耗同幻獸複製體（召喚重複取得）與金幣；融合永久 +4% 並給 1 技能點。</p></div></div><div class="growth-actions"><button id="growth-star">' + starText + '</button><button id="growth-fuse">🧬 融合升階（核心 ' + (2 + fusion) + '／精華 ' + (6 + fusion * 3) + '）</button><button id="growth-evolve">✨ ' + (nextStage > 3 ? '已達最終進化' : '解鎖' + pet.evolution[nextStage - 1].label + '（' + evolutionCost.medals + '🏅／' + evolutionCost.essence + '精華）') + '</button></div><h3>技能樹</h3><div id="skill-tree" class="skill-tree"></div>';
-    document.getElementById('growth-star').disabled = !starCost;
-    document.getElementById('growth-star').onclick = function () { var result = progression.starUp(pet.id); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderProgress(); renderGrowth(); growthMessage('升星成功！目前 ' + result.star + ' 星，全能力 +' + result.star * 10 + '%。'); };
-    document.getElementById('growth-fuse').disabled = fusion >= 3; document.getElementById('growth-fuse').onclick = function () { var result = progression.fuse(pet); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderProgress(); renderGrowth(); growthMessage('融合成功，全能力提升並獲得 1 技能點。'); };
-    document.getElementById('growth-evolve').disabled = nextStage > 3; document.getElementById('growth-evolve').onclick = function () { var result = progression.unlockEvolution(pet, nextStage); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderProgress(); renderGrowth(); growthMessage('進化階段已永久解鎖。'); };
+    var elementLabel = { fire: '火', forest: '森', ocean: '海', light: '光', dark: '暗' }[pet.element] || pet.element;
+    var starMaterials = starCost ? [{ icon: '🧩', label: pet.name + '複製體', owned: copies, cost: starCost.copies }, { icon: '🪙', label: '金幣', owned: progress.gold, cost: starCost.gold }] : [];
+    var coreCost = 2 + fusion, fusionEssenceCost = 6 + fusion * 3;
+    var fuseMaterials = [{ icon: '🧬', label: '融合核心', owned: progress.fusionCores, cost: coreCost }, { icon: '🔷', label: elementLabel + '元素精華', owned: essence, cost: fusionEssenceCost }];
+    var evolveMaterials = nextStage <= 3 ? [{ icon: '🏅', label: '戰術徽章', owned: progress.medals, cost: evolutionCost.medals }, { icon: '🔷', label: elementLabel + '元素精華', owned: essence, cost: evolutionCost.essence }] : [];
+    var starReady = Boolean(starCost && starMaterials.every(function (item) { return item.owned >= item.cost; }));
+    var fuseReady = fusion < 3 && fuseMaterials.every(function (item) { return item.owned >= item.cost; });
+    var evolveReady = nextStage <= 3 && evolveMaterials.every(function (item) { return item.owned >= item.cost; }) && fusion >= (evolutionCost.fusion || 0);
+    var starCard = '<article class="growth-action-card"><div class="growth-action-materials">' + (starCost ? growthMaterialsHtml(starMaterials) : '<span class="growth-max">已達星級上限</span>') + '</div><h4>⭐ ' + (starCost ? '升 ' + starCost.nextStar + ' 星' : '9 星完成') + '</h4><p>消耗召喚重複取得的同名幻獸複製體與金幣。每升一星，力量、魔力、防衛、速度與血量等戰鬥能力永久增加 10%，最高 9 星。</p><small>本次效果：' + (starCost ? star + ' 星 → ' + starCost.nextStar + ' 星；累積全能力加成 +' + starCost.nextStar * 10 + '%' : '已獲得最高 +90% 星級加成') + '</small><button id="growth-star" ' + (!starCost ? 'disabled' : '') + '>' + (starCost ? '查看材料並確認升星' : '已達 9 星上限') + '</button></article>';
+    var fuseCard = '<article class="growth-action-card"><div class="growth-action-materials">' + (fusion < 3 ? growthMaterialsHtml(fuseMaterials) : '<span class="growth-max">已達融合上限</span>') + '</div><h4>🧬 融合升階</h4><p>消耗融合核心與本幻獸的同系元素精華。每階讓全能力永久增加 4%，並立即取得 1 點技能點，可用於技能樹；最高融合 3 階。</p><small>本次效果：' + (fusion < 3 ? '融合 ' + fusion + ' → ' + (fusion + 1) + '；全能力 +4%；技能點 ' + points + ' → ' + (points + 1) : '已取得最高融合加成') + '</small><button id="growth-fuse" ' + (fusion >= 3 ? 'disabled' : '') + '>' + (fusion < 3 ? '查看材料並確認融合' : '融合已達 3 階') + '</button></article>';
+    var evolveLabel = nextStage <= 3 ? pet.evolution[nextStage - 1].label : '最終型';
+    var evolveCard = '<article class="growth-action-card"><div class="growth-action-materials">' + (nextStage <= 3 ? growthMaterialsHtml(evolveMaterials) + (evolutionCost.fusion ? '<span class="growth-prerequisite ' + (fusion >= evolutionCost.fusion ? 'enough' : 'short') + '">前置：融合 ' + fusion + ' / ' + evolutionCost.fusion + '</span>' : '') : '<span class="growth-max">已達最終進化</span>') + '</div><h4>✨ ' + (nextStage <= 3 ? '解鎖' + evolveLabel : '最終型完成') + '</h4><p>永久解鎖下一階幻獸立繪與戰鬥型態。每次進化讓戰鬥全能力倍率增加 12%；最終型需要先完成至少 1 次融合。</p><small>本次效果：' + (nextStage <= 3 ? pet.evolution[stage - 1].label + ' → ' + evolveLabel + '；進化能力加成 +' + (nextStage - 1) * 12 + '%' : '已解鎖三階立繪與最高 +24% 進化加成') + '</small><button id="growth-evolve" ' + (nextStage > 3 ? 'disabled' : '') + '>' + (nextStage <= 3 ? '查看材料並確認進化' : '已達最終進化') + '</button></article>';
+    dom.growthContent.innerHTML = '<div class="growth-overview"><div class="growth-portrait" style="background-image:url(\'' + pet.evolution[stage - 1].portrait + '\')"></div><div><h3>' + pet.name + '｜' + pet.roleLabel + '　<span class="star-row">' + (star ? '★'.repeat(star) : '☆ 0 星') + '</span></h3><div class="growth-meta"><span>星級 ' + star + '/9</span><span>進化 ' + stage + '/3</span><span>融合 ' + fusion + '/3</span><span>技能點 ' + points + '</span></div></div></div><div class="growth-resource-ledger"><b>目前持有材料</b><span>🧩 ' + pet.name + '複製體 ' + copies + '</span><span>🪙 金幣 ' + progress.gold + '</span><span>🏅 戰術徽章 ' + progress.medals + '</span><span>🧬 融合核心 ' + progress.fusionCores + '</span><span>🔷 ' + elementLabel + '元素精華 ' + essence + '</span></div><div class="growth-actions">' + starCard + fuseCard + evolveCard + '</div><h3>技能樹</h3><div id="skill-tree" class="skill-tree"></div>';
+    document.getElementById('growth-star').onclick = function () {
+      openGrowthConfirmation({ title: '⭐ 確認升至 ' + (starCost ? starCost.nextStar : star) + ' 星', copy: '升星會永久消耗同名複製體與金幣，完成後無法降星或返還材料。', materials: starMaterials, ready: starReady, effect: '全能力永久增加 10%；累積星級加成變為 +' + (starCost ? starCost.nextStar * 10 : star * 10) + '%。', onConfirm: function () { var result = progression.starUp(pet.id); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderProgress(); renderGrowth(); growthMessage('升星成功！目前 ' + result.star + ' 星，全能力 +' + result.star * 10 + '%。'); } });
+    };
+    document.getElementById('growth-fuse').onclick = function () {
+      openGrowthConfirmation({ title: '🧬 確認融合升階', copy: '融合會永久消耗融合核心與同系元素精華，最高可提升至融合 3 階。', materials: fuseMaterials, ready: fuseReady, effect: '融合 ' + fusion + ' → ' + Math.min(3, fusion + 1) + '；全能力永久 +4%，並取得 1 技能點。', onConfirm: function () { var result = progression.fuse(pet); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderProgress(); renderGrowth(); growthMessage('融合成功，全能力提升並獲得 1 技能點。'); } });
+    };
+    document.getElementById('growth-evolve').onclick = function () {
+      openGrowthConfirmation({ title: '✨ 確認解鎖' + evolveLabel, copy: '進化會永久消耗戰術徽章與同系元素精華，並切換為下一階幻獸立繪與戰鬥型態。', materials: evolveMaterials, ready: evolveReady, effect: (nextStage <= 3 ? pet.evolution[stage - 1].label + ' → ' + evolveLabel + '；進化全能力加成提升為 +' + (nextStage - 1) * 12 + '%。' : '已達最終型。'), onConfirm: function () { var result = progression.unlockEvolution(pet, nextStage); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderProgress(); renderGrowth(); growthMessage('進化階段已永久解鎖。'); } });
+    };
     var tree = document.getElementById('skill-tree'), unlocked = progress.skillTree[pet.id] || [];
     progression.treeFor(pet).forEach(function (node) { var button = document.createElement('button'), active = unlocked.indexOf(node.id) >= 0; button.className = 'tree-node ' + (active ? 'unlocked' : node.requires && unlocked.indexOf(node.requires) < 0 ? 'locked' : ''); button.disabled = active; button.innerHTML = '<b>' + (active ? '✓ ' : '') + node.name + '</b><small>' + node.description + '<br>需要 ' + node.cost + ' 技能點</small>'; button.onclick = function () { var result = progression.unlockSkill(pet, node.id); if (!result.ok) return growthMessage(result.reason); audio.play('unlock'); renderGrowth(); growthMessage('技能節點已啟用。'); }; tree.appendChild(button); });
     renderQuests();
@@ -1295,6 +1330,9 @@
   });
   document.getElementById('deploy').onclick = openDeploy; document.getElementById('close-deploy').onclick = function () { dom.deployModal.hidden = true; }; document.getElementById('cancel-deploy').onclick = function () { dom.deployModal.hidden = true; }; document.getElementById('confirm-deploy').onclick = confirmDeploy;
   document.querySelectorAll('[data-close]').forEach(function (button) { button.onclick = function () { document.getElementById(button.dataset.close).hidden = true; }; });
+  document.getElementById('growth-confirm-close').onclick = closeGrowthConfirmation;
+  document.getElementById('growth-confirm-cancel').onclick = closeGrowthConfirmation;
+  dom.growthConfirmAccept.onclick = function () { var action = pendingGrowthAction; if (!action) return; closeGrowthConfirmation(); action(); };
   dom.growthPet.onchange = function () { growthPetId = dom.growthPet.value; renderGrowth(); };
   dom.enterBattle.onclick = function () { audio.unlock(); if (state.over || state.phase !== 'deploy') reset(currentStage.id); setView('battle'); audio.play('ui'); render(); focusDeployZone(true); };
   function stageRef() { return currentStage.tower ? towerStageFor(currentStage.floor) : currentStage.id; }
@@ -1308,7 +1346,7 @@
   };
   var towerButton = document.getElementById('open-tower');
   if (towerButton) towerButton.onclick = function () { audio.unlock(); enterTower(progress.tower.best + 1); };
-  document.addEventListener('keydown', function (event) { if (event.key === 'Escape') ['deploy-modal', 'campaign-modal', 'growth-modal', 'dex-modal', 'gacha-modal', 'daily-modal', 'home-modal', 'shop-modal', 'bag-modal'].forEach(function (id) { var modal = document.getElementById(id); if (modal) modal.hidden = true; }); });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { closeGrowthConfirmation(); ['deploy-modal', 'campaign-modal', 'growth-modal', 'dex-modal', 'gacha-modal', 'daily-modal', 'home-modal', 'shop-modal', 'bag-modal'].forEach(function (id) { var modal = document.getElementById(id); if (modal) modal.hidden = true; }); } });
 
   window.__TACTICS_DEBUG__ = {
     getState: function () { return { stage: currentStage.id, view: currentView, round: state.round, phase: state.phase, over: state.over, allies: alive('ally').length, enemies: alive('enemy').length, obstacles: state.obstacles.length, resources: JSON.parse(JSON.stringify(progress)) }; },

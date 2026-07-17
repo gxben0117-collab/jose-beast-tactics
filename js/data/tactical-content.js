@@ -113,7 +113,7 @@
 
   /* 決定性障礙群：以三個短牆／岩群形成戰術通道，避免全圖零碎散點。 */
   function obstaclesFor(stage, cols, rows) {
-    cols = cols || 20; rows = rows || 20;
+    cols = cols || 25; rows = rows || 25;
     var result = [], used = {};
     function add(baseX, baseY, points) {
       points.forEach(function (point) {
@@ -150,6 +150,13 @@
   /* 地形以 3~5 格半徑的大區塊生成，同屬性會自然相連，不再逐格灑點。 */
   function terrainAt(stage, x, y) {
     var map = mapById(stage.mapId), theme = map ? map.theme : 'rift';
+    var chapter = Number(String(stage.mapId || 'c1').replace('c', '')) || 1;
+    var riverX = 12 + Math.round(Math.sin(y * .42 + chapter) * 2);
+    if (chapter <= 2 && Math.abs(x - riverX) <= 1) return 'water';
+    if (chapter === 3 && Math.abs(y - (9 + Math.round(Math.sin(x * .45) * 2))) <= 1) return 'fire';
+    if ((chapter === 5 || chapter === 7) && (y < 4 || y > 20 || Math.abs(y - (12 + Math.round(Math.sin(x * .55) * 3))) <= 1)) return 'water';
+    if (chapter === 8 && (Math.abs(x - 13) <= 1 || Math.abs(y - 12) <= 1)) return 'fire';
+    if (chapter === 10 && ((Math.abs(x - 13) <= 1 || Math.abs(y - 12) <= 1) || ((x - 13) * (x - 13) + (y - 12) * (y - 12) < 16))) return 'fire';
     if (theme === 'ember') {
       if (terrainPatch(stage, x, y, 1, 5, 4) || terrainPatch(stage, x, y, 2, 4, 5)) return 'fire';
       return terrainPatch(stage, x, y, 3, 3, 3) ? 'forest' : '';
@@ -176,6 +183,7 @@
     mapById: mapById,
     stageById: stageById,
     terrainAt: terrainAt,
+    mapLayout: function (stage) { return stage.mapId + (stage.boss ? '-boss' : stage.hard ? '-hard' : '-field'); },
     obstaclesFor: obstaclesFor,
     rosterFor: rosterFor
   });
