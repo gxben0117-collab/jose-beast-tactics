@@ -231,7 +231,7 @@
 
 /* ══ 體型系統／素材包視覺／新特效（V0.12）══ */
 
-/* 多格單位：玩家幻獸固定 1×1／2×2，以錨點格為基準向右下擴張。 */
+/* 多格單位：依資料使用 1×1／2×2／3×3，以錨點格為基準向右下擴張。 */
 .cell{overflow:visible}
 .unit.size-1{left:0;top:0;right:auto;bottom:auto;width:100%;height:100%}
 .unit.size-2{left:0;top:0;right:auto;bottom:auto;width:200%;height:200%;z-index:6}
