@@ -698,7 +698,12 @@
       element.addEventListener('click', function () { note('障礙物無法通行，也會遮蔽遠程技能的視線。'); });
       return element;
     }
-    if (tile) { element.classList.add('terrain-' + tile); element.title = tile === 'fire' ? '熔岩：火系增傷，非火系每回合受傷' : tile === 'forest' ? '森林：森林系防禦與治療提升' : '水域：海洋系移動與傷害提升'; element.innerHTML = '<span class="terrain-hint terrain-hint-' + tile + '"></span>'; }
+    if (tile) {
+      var terrainCopy = tile === 'fire' ? '熔岩：火系增傷，非火系每回合受傷' : tile === 'forest' ? '森林：森林系防禦與治療提升' : '水域：海洋系移動與傷害提升';
+      var terrainGlyph = tile === 'fire' ? '♨' : tile === 'forest' ? '♣' : '≈';
+      element.classList.add('terrain-' + tile); element.title = terrainCopy;
+      element.innerHTML = (x * 3 + y * 5 + currentStage.seed) % 11 === 0 ? '<span class="terrain-hint terrain-hint-' + tile + '" aria-hidden="true">' + terrainGlyph + '</span>' : '';
+    }
     else element.innerHTML = '';
     if (state.phase === 'deploy' && inDeployZone(x, y) && !unit) element.classList.add('deploy-zone');
     if (threatTileMap && threatTileMap[x + ',' + y]) element.classList.add(threatTileMap[x + ',' + y] === 'move' ? 'threat-move' : 'threat-range');
@@ -749,6 +754,7 @@
       var pendingUnit = state.units.find(function (unit) { return unit.key === state.pendingTarget && unit.hp > 0; });
       if (!pendingUnit || !active || active.acted || state.mode !== 'skill' || state.phase !== 'player') clearForecast();
     } else { var panel = document.getElementById('forecast'); if (panel && !panel.hidden) panel.hidden = true; }
+    dom.board.classList.toggle('is-deploying', state.phase === 'deploy');
     var fragment = document.createDocumentFragment();
     for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) fragment.appendChild(cell(x, y));
     dom.board.innerHTML = ''; dom.board.appendChild(fragment);
