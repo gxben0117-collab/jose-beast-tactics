@@ -116,12 +116,12 @@ body.map-rift .board{background:radial-gradient(circle at 26% 32%,#453056 0 18%,
 
 /* 地形改為柔和有機色斑（不佔滿整格、圓角不規則、發光內暈） */
 .idle-arena .cell.terrain-fire,.idle-arena .cell.terrain-forest,.idle-arena .cell.terrain-water,.idle-arena .cell:nth-child(odd).terrain-fire,.idle-arena .cell:nth-child(odd).terrain-forest,.idle-arena .cell:nth-child(odd).terrain-water{background-color:transparent;background-image:none}
-.cell.terrain-fire::before,.cell.terrain-forest::before,.cell.terrain-water::before{content:'';position:absolute;inset:7%;z-index:0;pointer-events:none;border-radius:58% 42% 50% 50%/48% 55% 45% 52%}
-.cell:nth-child(3n).terrain-fire::before,.cell:nth-child(3n).terrain-forest::before,.cell:nth-child(3n).terrain-water::before{border-radius:44% 56% 60% 40%/55% 44% 56% 45%;transform:rotate(24deg)}
-.cell:nth-child(5n).terrain-fire::before,.cell:nth-child(5n).terrain-forest::before,.cell:nth-child(5n).terrain-water::before{border-radius:52% 48% 40% 60%/42% 58% 46% 54%;transform:rotate(-18deg)}
-.cell.terrain-fire::before{background:radial-gradient(circle at 46% 40%,#ff9a4d66 0 30%,#c2452a55 62%,transparent 78%);box-shadow:inset 0 0 12px #ff7b2e55}
-.cell.terrain-forest::before{background:radial-gradient(circle at 46% 40%,#7ed67d55 0 30%,#2f7a4455 62%,transparent 78%);box-shadow:inset 0 0 12px #55c97a44}
-.cell.terrain-water::before{background:radial-gradient(circle at 46% 40%,#6fc2ff5c 0 30%,#2c68b555 62%,transparent 78%);box-shadow:inset 0 0 12px #55a8ff4d}
+.cell.terrain-fire::before,.cell.terrain-forest::before,.cell.terrain-water::before{content:'';position:absolute;inset:-1px;z-index:0;pointer-events:none;border-radius:0;transform:none}
+.cell:nth-child(3n).terrain-fire::before,.cell:nth-child(3n).terrain-forest::before,.cell:nth-child(3n).terrain-water::before,
+.cell:nth-child(5n).terrain-fire::before,.cell:nth-child(5n).terrain-forest::before,.cell:nth-child(5n).terrain-water::before{border-radius:0;transform:none}
+.cell.terrain-fire::before{background:linear-gradient(145deg,#ff9a4d4f,#b73f2b66);box-shadow:inset 0 0 16px #ff7b2e42}
+.cell.terrain-forest::before{background:linear-gradient(145deg,#6bc87942,#28744666);box-shadow:inset 0 0 16px #55c97a38}
+.cell.terrain-water::before{background:linear-gradient(145deg,#67b9f84d,#2866aa66);box-shadow:inset 0 0 16px #55a8ff3d}
 .terrain-hint{position:relative;z-index:1;opacity:.75;filter:drop-shadow(0 1px 2px #000a)}
 
 /* 障礙物改為立體岩塊感 */

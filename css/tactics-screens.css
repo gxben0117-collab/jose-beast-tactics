@@ -33,11 +33,11 @@
 .battle-panel{position:sticky;top:10px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 90px);overflow-y:auto}
 .battle-controls{display:grid;gap:8px}
 
-/* 大地圖鏡頭：實際 30×30，視窗只取景約 12×10，可拖曳平移。
+/* 戰場鏡頭：實際 20×20，視窗保留較大的可讀格子並可拖曳平移。
    --cell 明確定義欄寬與列高（格子恆為正方形）；grid 模板由 JS 依 COLS/ROWS 設定。 */
 .board-viewport{position:relative}
-/* 視窗取景約 18×9（格子放大版）；--zoom 由縮放按鈕切換（1 / 1.3）。 */
-.screen-battle .board-viewport{--zoom:1;--cell:calc(clamp(34px,min(calc((100vw - 380px)/18),calc((100vh - 330px)/9)),84px)*var(--zoom))}
+/* 預設格子長寬為舊版 1.5 倍；--zoom 由縮放按鈕切換（1.5 / 2）。 */
+.screen-battle .board-viewport{--zoom:1.5;--cell:calc(clamp(34px,min(calc((100vw - 380px)/18),calc((100vh - 330px)/9)),84px)*var(--zoom))}
 .screen-battle .board-scroll{overflow:auto;height:calc(var(--cell)*9 + 12px);cursor:grab;touch-action:none;scrollbar-width:thin}
 .screen-battle .board-scroll.dragging{cursor:grabbing;user-select:none}
 .screen-battle .board{width:max-content;min-width:0;aspect-ratio:auto;height:auto}
@@ -242,11 +242,9 @@
 @keyframes boss-tag{0%,100%{box-shadow:0 0 8px #ff5d73,0 0 16px #ff5d7388;filter:brightness(1)}50%{box-shadow:0 0 14px #ff7d8f,0 0 30px #ff5d73;filter:brightness(1.3)}}
 
 /* 素材包地形圖塊：熔岩／森林／水域格與障礙 */
-.cell .terrain-hint{position:absolute;inset:10%;z-index:0;display:block;background-position:center;background-size:cover;background-repeat:no-repeat;border-radius:20%;opacity:.78;filter:drop-shadow(0 2px 3px #0008)}
-.terrain-hint-fire{background-image:url('../assets/terrain/tile-fire.png')}
-.terrain-hint-forest{background-image:url('../assets/terrain/tile-forest.png')}
-.terrain-hint-water{background-image:url('../assets/terrain/tile-water.png')}
-.idle-arena .cell.terrain-fire::before,.idle-arena .cell.terrain-forest::before,.idle-arena .cell.terrain-water::before{display:none}
+/* 舊版每格地形 PNG 會形成重複方塊；改由 tactics-battle.css 的跨格色域統一呈現。 */
+.cell .terrain-hint{display:none}
+.idle-arena .cell.terrain-fire::before,.idle-arena .cell.terrain-forest::before,.idle-arena .cell.terrain-water::before{display:block}
 .cell.obstacle .obstacle-icon{position:absolute;inset:2%;z-index:1;display:block;background-position:center;background-size:contain;background-repeat:no-repeat;font-size:0;filter:drop-shadow(0 4px 6px #000b)}
 body.map-ember .obstacle-icon{background-image:url('../assets/terrain/rock-ember.png')}
 body.map-verdant .obstacle-icon{background-image:url('../assets/terrain/rock-verdant.png')}
