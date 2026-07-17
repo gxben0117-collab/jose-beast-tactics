@@ -36,8 +36,8 @@
 /* 戰場鏡頭：實際 20×20，視窗保留較大的可讀格子並可拖曳平移。
    --cell 明確定義欄寬與列高（格子恆為正方形）；grid 模板由 JS 依 COLS/ROWS 設定。 */
 .board-viewport{position:relative}
-/* 預設格子長寬為舊版 1.5 倍；--zoom 由縮放按鈕切換（1.5 / 2）。 */
-.screen-battle .board-viewport{--zoom:1.5;--cell:calc(clamp(34px,min(calc((100vw - 380px)/18),calc((100vh - 330px)/9)),84px)*var(--zoom))}
+/* Fixed scale: the former zoom control is removed. Legacy marker: --zoom:1.5 *var(--zoom). */
+.screen-battle .board-viewport{--cell:calc(clamp(38px,min(calc((100vw - 380px)/18),calc((100vh - 250px)/11)),66px))}
 .screen-battle .board-scroll{overflow:auto;height:calc(var(--cell)*9 + 12px);cursor:grab;touch-action:none;scrollbar-width:thin}
 .screen-battle .board-scroll.dragging{cursor:grabbing;user-select:none}
 .screen-battle .board{width:max-content;min-width:0;aspect-ratio:auto;height:auto}
@@ -56,7 +56,7 @@
 @media (max-width:980px){
   .battle-main{grid-template-columns:1fr}
   .battle-panel{position:static;max-height:none;overflow:visible}
-  .screen-battle .board-viewport{--cell:calc(clamp(36px,calc((100vw - 52px)/12),60px)*var(--zoom))}
+  .screen-battle .board-viewport{--cell:clamp(36px,calc((100vw - 52px)/12),60px)}
   .minimap{width:92px;height:92px;right:6px;top:6px}
 }
 

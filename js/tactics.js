@@ -351,6 +351,7 @@
   var suppressClickUntil = 0;
   function cameraSuppressed() { return Date.now() < suppressClickUntil; }
   function focusCamera(x, y, instant) {
+    if (state && state.animating) return;
     var scroller = dom.board.parentElement, sample = dom.board.firstChild;
     if (!scroller || !sample || !sample.offsetWidth) return;
     var size = sample.offsetWidth;
@@ -769,7 +770,7 @@
     if (unit.freeze > 0) statusText.push('❄ 冰凍 ' + unit.freeze);
     if (unit.poison > 0) statusText.push('☠ 中毒 ' + unit.poison);
     if (unit.burn > 0) statusText.push('🔥 灼燒 ' + unit.burn);
-    dom.detail.innerHTML = '<div class="detail-head"><span class="detail-face" style="background-image:url(\'' + portrait(unit) + '\')"></span><div class="detail-title"><strong>' + unit.p.name + '</strong><small>' + unit.p.roleLabel + '｜' + unit.p.evolution[Math.min(unit.evolution, unit.p.evolution.length) - 1].label + '</small><span class="detail-hp"><i style="width:' + (100 * unit.hp / unit.maxHp) + '%"></i></span></div></div>被動：' + passive + (statusText.length ? '<br>狀態：' + statusText.join('、') : '') + '<div class="stat-grid"><span>力量 ' + Math.round(stat(unit, 'power')) + '</span><span>魔力 ' + Math.round(stat(unit, 'magic')) + '</span><span>防衛 ' + Math.round(stat(unit, 'defense')) + '</span><span>速度 ' + unit.p.stats.speed + '</span><span>血量 ' + unit.hp + '/' + unit.maxHp + '</span><span>移動 ' + moveRange(unit) + ' 格</span></div>';
+    dom.detail.innerHTML = '<div class="detail-head"><span class="detail-face" style="background-image:url(\'' + portrait(unit) + '\')"></span><div class="detail-title"><strong>' + unit.p.name + '</strong><small>' + unit.p.roleLabel + '</small><span class="detail-hp"><i style="width:' + (100 * unit.hp / unit.maxHp) + '%"></i></span></div></div>被動：' + passive + (statusText.length ? '<br>狀態：' + statusText.join('、') : '') + '<div class="stat-grid"><span>力量 ' + Math.round(stat(unit, 'power')) + '</span><span>魔力 ' + Math.round(stat(unit, 'magic')) + '</span><span>防衛 ' + Math.round(stat(unit, 'defense')) + '</span><span>速度 ' + unit.p.stats.speed + '</span><span>血量 ' + unit.hp + '/' + unit.maxHp + '</span><span>移動 ' + moveRange(unit) + ' 格</span></div>';
     if (unit.team !== 'ally') return;
     unit.p.skills.forEach(function (skill, index) {
       var button = document.createElement('button'), cooldown = unit.cooldowns[index] || 0;
