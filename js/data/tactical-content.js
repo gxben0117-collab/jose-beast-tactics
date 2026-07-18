@@ -111,21 +111,25 @@
   function mapById(id) { return chapters.find(function (chapter) { return chapter.id === id; }); }
   function stageById(id) { return stages.find(function (stage) { return stage.id === id; }) || stages[0]; }
 
-  /* 決定性障礙群：以三個短牆／岩群形成戰術通道，避免全圖零碎散點。 */
-  function obstaclesFor(stage, cols, rows) {
-    cols = cols || 25; rows = rows || 25;
-    var result = [], used = {};
-    function add(baseX, baseY, points) {
-      points.forEach(function (point) {
-        var x = baseX + point[0], y = baseY + point[1], key = x + ',' + y;
-        if (x < 7 || x >= cols - 2 || y < 1 || y >= rows - 1 || used[key]) return;
-        used[key] = true; result.push({ x: x, y: y });
-      });
+  /* 地形與禁行逐格資料：由 scripts/generate-map-terrain.py 依 60 張美術大地圖
+     產出（js/data/map-terrain.js），同一張圖的所有關卡共用同一份標註。 */
+  var TERRAIN_CODES = { W: 'water', F: 'forest', R: 'fire' };
+  function mapVariant(stage) {
+    if (stage.boss) return 'boss';
+    if (stage.hard) return 'hard-' + (Number(String(stage.id).match(/-h([1-4])$/)?.[1]) || 1);
+    return 'field';
+  }
+  function terrainGrid(stage) {
+    var data = global.TACTICAL_MAP_TERRAIN || {};
+    var chapter = Math.max(1, Math.min(10, Number(stage.chapter) || 1));
+    return data['chapter-' + String(chapter).padStart(2, '0') + '-' + mapVariant(stage)] || null;
+  }
+  function obstaclesFor(stage) {
+    var grid = terrainGrid(stage), result = [];
+    if (!grid) return result;
+    for (var y = 0; y < grid.length; y++) for (var x = 0; x < grid[y].length; x++) {
+      if (grid[y].charAt(x) === '#') result.push({ x: x, y: y });
     }
-    var shift = stage.seed % 3 - 1;
-    add(Math.floor(cols * 0.44) + shift, 2 + stage.seed % 3, [[0,0],[1,0],[2,0],[2,1]]);
-    add(Math.floor(cols * 0.61) - shift, Math.floor(rows * 0.43), [[0,0],[0,1],[0,2],[1,2]]);
-    add(Math.floor(cols * 0.48), rows - 6 - stage.seed % 2, [[0,0],[1,0],[1,1],[2,1]]);
     return result;
   }
 
@@ -139,39 +143,11 @@
     return result;
   }
 
-  function terrainPatch(stage, x, y, salt, radiusX, radiusY) {
-    var centerX = 3 + Math.abs(stage.seed * 17 + salt * 11) % 14;
-    var centerY = 3 + Math.abs(stage.seed * 13 + salt * 19) % 14;
-    var dx = (x - centerX) / radiusX, dy = (y - centerY) / radiusY;
-    var edge = ((x * 11 + y * 7 + stage.seed + salt * 5) % 9 - 4) * 0.025;
-    return dx * dx + dy * dy <= 1 + edge;
-  }
-
-  /* 地形以 3~5 格半徑的大區塊生成，同屬性會自然相連，不再逐格灑點。 */
+  /* 依美術大地圖逐格標註回傳水／森／火；禁行格與圖外回傳空字串。 */
   function terrainAt(stage, x, y) {
-    var map = mapById(stage.mapId), theme = map ? map.theme : 'rift';
-    var chapter = Number(String(stage.mapId || 'c1').replace('c', '')) || 1;
-    var riverX = 12 + Math.round(Math.sin(y * .42 + chapter) * 2);
-    if (chapter <= 2 && Math.abs(x - riverX) <= 1) return 'water';
-    if (chapter === 3 && Math.abs(y - (9 + Math.round(Math.sin(x * .45) * 2))) <= 1) return 'fire';
-    if ((chapter === 5 || chapter === 7) && (y < 4 || y > 20 || Math.abs(y - (12 + Math.round(Math.sin(x * .55) * 3))) <= 1)) return 'water';
-    if (chapter === 8 && (Math.abs(x - 13) <= 1 || Math.abs(y - 12) <= 1)) return 'fire';
-    if (chapter === 10 && ((Math.abs(x - 13) <= 1 || Math.abs(y - 12) <= 1) || ((x - 13) * (x - 13) + (y - 12) * (y - 12) < 16))) return 'fire';
-    if (theme === 'ember') {
-      if (terrainPatch(stage, x, y, 1, 5, 4) || terrainPatch(stage, x, y, 2, 4, 5)) return 'fire';
-      return terrainPatch(stage, x, y, 3, 3, 3) ? 'forest' : '';
-    }
-    if (theme === 'verdant') {
-      if (terrainPatch(stage, x, y, 4, 5, 4) || terrainPatch(stage, x, y, 5, 4, 5)) return 'forest';
-      return terrainPatch(stage, x, y, 6, 3, 4) ? 'water' : '';
-    }
-    if (theme === 'tide') {
-      if (terrainPatch(stage, x, y, 7, 5, 4) || terrainPatch(stage, x, y, 8, 4, 5)) return 'water';
-      return terrainPatch(stage, x, y, 9, 3, 3) ? 'forest' : '';
-    }
-    if (terrainPatch(stage, x, y, 10, 4, 4)) return 'fire';
-    if (terrainPatch(stage, x, y, 11, 4, 4)) return 'forest';
-    return terrainPatch(stage, x, y, 12, 4, 4) ? 'water' : '';
+    var grid = terrainGrid(stage);
+    var row = grid && grid[y];
+    return (row && TERRAIN_CODES[row.charAt(x)]) || '';
   }
 
   global.TACTICAL_CONTENT = Object.freeze({
@@ -184,6 +160,10 @@
     stageById: stageById,
     terrainAt: terrainAt,
     mapLayout: function (stage) { return stage.mapId + (stage.boss ? '-boss' : stage.hard ? '-hard' : '-field'); },
+    mapAsset: function (stage) {
+      var chapter = Math.max(1, Math.min(10, Number(stage.chapter) || 1));
+      return 'assets/maps/chapter-' + String(chapter).padStart(2, '0') + '-' + mapVariant(stage) + '-21x10.jpg';
+    },
     obstaclesFor: obstaclesFor,
     rosterFor: rosterFor
   });
