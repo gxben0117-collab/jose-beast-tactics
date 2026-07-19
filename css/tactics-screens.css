@@ -17,6 +17,9 @@
 /* 戰鬥頁棋盤下方的地形效果速覽 */
 .board-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;padding:8px 12px;border-radius:9px;background:#0e172bcc;border:1px solid #2c4168;color:#9db3d9;font-size:.72rem;line-height:1.5}
 .board-legend span{white-space:nowrap}
+.terrain-toggle{padding:3px 9px;border:1px solid #5573a9;border-radius:999px;background:#17233d;color:#dbe8ff;font:inherit;font-weight:800;cursor:pointer;white-space:nowrap}
+.terrain-toggle[aria-pressed="true"]{border-color:#76c892;background:#173225;color:#caffd8;box-shadow:0 0 0 1px #76c844}
+.deploy-help b,#deploy-help b{color:#ffe29a}.deploy-card.over-capacity:not(.selected){filter:grayscale(.75);opacity:.48}.deploy-card.over-capacity:not(.selected)::after{content:'容量不足';color:#ff9c91;font-size:.62rem;font-weight:900}
 .enter-battle-dock{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));z-index:60;display:grid;grid-template-columns:1fr minmax(230px,300px);align-items:center;gap:18px;width:min(760px,calc(100vw - 32px));padding:10px 12px 10px 18px;transform:translateX(-50%);border:1px solid #d39a53;border-radius:12px;background:linear-gradient(135deg,#2b1915f5,#171013f5);box-shadow:0 18px 50px #000c,0 0 0 1px #ffe4a11c inset;backdrop-filter:blur(10px)}
 .enter-battle-dock span{display:flex;flex-direction:column;gap:2px;min-width:0;color:#ffe2a1}
 .enter-battle-dock span b{font-size:.9rem;letter-spacing:.08em}
@@ -62,7 +65,7 @@
 .battle-roster-card em{height:4px;margin-top:4px;overflow:hidden;border-radius:5px;background:#3f1818}
 .battle-roster-card em u{display:block;height:100%;background:linear-gradient(90deg,#4fbf6a,#c6df73);text-decoration:none}
 .battle-roster-card.selected{border-color:#f2cb70!important;background:#3b291c!important;box-shadow:0 0 0 2px #d99b4144}
-.battle-roster-card.acted{opacity:.62}
+.battle-roster-card.acted{opacity:.68;background:#171416;border-color:#56413a}.battle-roster-card.acted>i{filter:grayscale(.9) saturate(.35) brightness(.42)}.battle-roster-card.acted small{color:#8f8580}
 .battle-roster-card.defeated{filter:grayscale(1);opacity:.35}
 .battle-team-trait{margin:0;padding:8px;font-size:.66rem;line-height:1.35}
 .battle-team-trait b,.battle-team-trait span{display:block}
@@ -82,22 +85,11 @@
 .screen-battle .board{width:100%;min-width:0;aspect-ratio:21 / 10;height:auto}
 .screen-battle .cell{min-height:0}
 
-/* 小地圖 */
-.minimap{position:absolute;right:10px;top:10px;z-index:16;width:118px;height:118px;border-radius:10px;background:#0a1120d9;border:1px solid #45598c;box-shadow:0 8px 22px #000a;cursor:pointer;overflow:hidden}
-.minimap-dots{position:absolute;inset:0}
-.minimap-dots i{position:absolute;width:5px;height:5px;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
-.minimap-dots .mm-ally{background:#63b3ff;box-shadow:0 0 4px #63b3ff}
-.minimap-dots .mm-enemy{background:#ff717b;box-shadow:0 0 4px #ff717b}
-.minimap-dots .mm-boss{width:7px;height:7px;background:#ffd36a;box-shadow:0 0 6px #ffb02f}
-.minimap-dots .mm-rock{width:3px;height:3px;border-radius:30%;background:#8fa3c8aa}
-.minimap-view{position:absolute;border:1px solid #ffe9b0;border-radius:3px;background:#ffffff14;box-shadow:0 0 8px #ffd36a55;pointer-events:none;transition:all .12s linear}
-
 @media (max-width:980px){
   .battle-main{grid-template-columns:1fr}
   .battle-ally-panel{display:none}
   .battle-panel{position:static;max-height:none;overflow:visible}
   .screen-battle .board-viewport{--cell:clamp(36px,calc((100vw - 52px)/12),60px)}
-  .minimap{width:92px;height:92px;right:6px;top:6px}
 }
 
 /* ── 畫面三：結算 ── */
@@ -136,6 +128,13 @@
 /* 選中單位資訊卡 */
 .detail-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .detail-face{flex:0 0 54px;height:54px;border-radius:10px;background:#0b1327 center/contain no-repeat;box-shadow:inset 0 0 0 1px #ffffff2e}
+.detail-title{min-width:0;flex:1}.detail-title strong,.detail-title small{display:block}.detail-title strong{color:#fff0c5;font-size:1rem}.detail-title small{margin:2px 0 6px;color:#bcd5f4;font-size:.7rem}
+.detail-hp{display:block;height:6px;overflow:hidden;border-radius:999px;background:#40191a}.detail-hp i{display:block;height:100%;background:linear-gradient(90deg,#45b85d,#d9e775)}
+.detail-tags{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 8px}.detail-tags span{padding:2px 6px;border:1px solid #79563a;border-radius:999px;background:#251815;color:#e8c994;font-size:.64rem}
+.detail-passive{margin:0;padding:7px;border-left:3px solid #a97843;background:#211615;color:#d6c0a3;font-size:.7rem;line-height:1.45}
+.detail-skill-title{margin:10px 0 5px;color:#f4d48d;font-size:.78rem}
+.detail-skill-list{display:grid;gap:5px;margin:0;padding:0;list-style:none}.detail-skill-list li{display:grid;gap:1px;padding:6px 7px;border:1px solid #593d2d;border-radius:4px;background:#211614}.detail-skill-list b{color:#ffe5b0;font-size:.72rem}.detail-skill-list span{color:#bca88f;font-size:.62rem}
+.idle-arena .unit.inspected{outline:2px solid #ffe38a;outline-offset:2px;filter:drop-shadow(0 0 5px #ffd86f) drop-shadow(2px 4px 1px #1a0c09)}
 .detail-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .detail-title strong{font-size:.95rem}
 .detail-title small{color:#9db3d9}
@@ -250,6 +249,15 @@
 .dex-card.unknown .deploy-art{filter:brightness(0) opacity(.55)}
 .dex-card.unknown{opacity:.6}
 
+/* V0.18 自由部署、隊伍編排與圖鑑 */
+.deploy-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 7px;padding:9px 11px;border:1px solid #3e6e91;border-radius:8px;background:linear-gradient(135deg,#12263a,#152037);box-shadow:0 5px 18px #0006}
+.deploy-toolbar[hidden]{display:none!important}.deploy-toolbar>div:first-child{display:flex;flex-direction:column;gap:2px}.deploy-toolbar b{color:#9bdcff;font-size:.84rem}.deploy-toolbar span{color:#b9c9df;font-size:.69rem}.deploy-toolbar-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.deploy-toolbar button{min-height:34px;padding:6px 10px;border:1px solid #41617c;border-radius:7px;background:#172b40;color:#dcecff;font-size:.7rem;font-weight:800}.deploy-toolbar button:hover{border-color:#78cfff;background:#1d3b59}.deploy-toolbar button.primary{border-color:#c78935;background:linear-gradient(#e1a74c,#a85d20);color:#1b1008}
+.roster-dialog{width:min(980px,96vw)}.deploy-budget{display:grid;gap:7px;margin:4px 0 10px;padding:9px 11px;border:1px solid #344b70;border-radius:9px;background:#101a2c}.deploy-budget>div{display:flex;justify-content:space-between;gap:10px;color:#9fb0ca;font-size:.72rem}.deploy-budget b{color:#f4dfab}.deploy-budget>i{display:block;height:7px;overflow:hidden;border-radius:99px;background:#07101d}.deploy-budget u{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#40a6ff,#56e3a1);transition:width .2s}.deploy-budget u.near-limit{background:linear-gradient(90deg,#f4b34d,#ff695f)}
+.deploy-filter-bar,.dex-filter-bar{display:grid;grid-template-columns:minmax(150px,1.5fr) repeat(3,minmax(110px,1fr)) auto auto;gap:7px;margin-bottom:9px}.deploy-filter-bar input,.deploy-filter-bar select,.dex-filter-bar input,.dex-filter-bar select{min-width:0;height:36px;padding:0 9px;border:1px solid #354b70;border-radius:7px;background:#0d1729;color:#e4edff}.deploy-filter-bar button{min-height:36px;padding:0 12px;border:1px solid #496789;border-radius:7px;background:#182a43;color:#e4edff;font-weight:800}.deploy-card{position:relative}.deploy-cost{position:absolute;z-index:2;top:5px;right:5px;display:grid;place-items:center;min-width:23px;height:23px;padding:0 4px;border-radius:99px;background:#16253ded;border:1px solid #7194bd;color:#fff4be;font-size:.69rem;font-weight:900}.empty-filter{grid-column:1/-1;padding:24px;text-align:center;color:#879ab8}
+.dex-dialog{width:min(1080px,97vw)}.dex-filter-bar{grid-template-columns:minmax(160px,1.5fr) repeat(3,minmax(110px,1fr));margin:0 0 10px}.dex-layout{display:grid;grid-template-columns:minmax(330px,1.05fr) minmax(320px,.95fr);gap:12px;min-height:390px}.dex-layout .dex-grid{grid-template-columns:repeat(auto-fill,minmax(105px,1fr));align-content:start;max-height:62vh;padding-right:4px}.dex-card{cursor:pointer;color:inherit}.dex-card.selected{border-color:#f4c35b;box-shadow:0 0 0 2px #f4c35b42 inset;background:#1c2c4a}.dex-detail{max-height:62vh;overflow:auto;padding:14px;border:1px solid #32486e;border-radius:11px;background:linear-gradient(160deg,#111d32,#0b1425);color:#c8d6ed}.dex-detail-hero{display:grid;grid-template-columns:112px 1fr;gap:13px;align-items:center}.dex-detail-hero>span{width:112px;aspect-ratio:1;border:1px solid #3c5277;border-radius:12px;background:#091225 center/contain no-repeat}.dex-detail-hero.unknown>span{filter:brightness(0) opacity(.55)}.dex-detail h3{margin:4px 0;color:#fff2cd;font-size:1.25rem}.dex-detail h4{margin:15px 0 7px;color:#9ed8ff}.dex-detail p,.dex-detail small{color:#9fb1cd;font-size:.75rem}.dex-tags,.dex-stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.dex-tags span{padding:5px 8px;border:1px solid #385273;border-radius:99px;background:#13243a;color:#c8ddf5;font-size:.68rem}.dex-stats{display:grid;grid-template-columns:repeat(5,1fr)}.dex-stats span{display:flex;flex-direction:column;padding:8px 4px;border-radius:7px;background:#0a1425;text-align:center;color:#8196b6;font-size:.62rem}.dex-stats b{color:#e8f0ff;font-size:.9rem}.dex-skills{display:grid;gap:6px}.dex-skills article{display:flex;justify-content:space-between;gap:8px;padding:8px 9px;border-left:3px solid #4489bf;border-radius:5px;background:#142238}.dex-skills b{color:#e7efff;font-size:.73rem}.dex-skills small{text-align:right;font-size:.64rem}
+@media(max-width:760px){.deploy-toolbar{align-items:stretch;flex-direction:column}.deploy-toolbar-actions{display:grid;grid-template-columns:repeat(2,1fr)}.deploy-filter-bar,.dex-filter-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.deploy-filter-bar input,.dex-filter-bar input{grid-column:1/-1}.dex-layout{grid-template-columns:1fr;min-height:0}.dex-layout .dex-grid{max-height:42vh}.dex-detail{max-height:none}.dex-detail-hero{grid-template-columns:84px 1fr}.dex-detail-hero>span{width:84px}.dex-stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:440px){.deploy-filter-bar,.dex-filter-bar{grid-template-columns:1fr}.deploy-filter-bar input,.dex-filter-bar input{grid-column:auto}.deploy-budget>div{align-items:flex-start;flex-direction:column}.dex-skills article{align-items:flex-start;flex-direction:column}.dex-skills small{text-align:left}}
+
 /* 召喚 */
 .gacha-info{margin:0 0 10px;color:#c9d8f5;font-size:.88rem}
 .gacha-info b{color:#ffd9a0}
@@ -296,13 +304,17 @@
 .unit.size-1{left:0;top:0;right:auto;bottom:auto;width:100%;height:100%}
 .unit.size-2{left:0;top:0;right:auto;bottom:auto;width:200%;height:200%;z-index:6}
 .unit.size-3{left:0;top:0;right:auto;bottom:auto;width:300%;height:300%;z-index:6}
+.unit.size-4{left:0;top:0;right:auto;bottom:auto;width:400%;height:400%;z-index:8}
+.unit.size-5{left:0;top:0;right:auto;bottom:auto;width:500%;height:500%;z-index:9}
 .idle-arena .unit{padding:0}
 .idle-arena .unit .portrait{position:absolute;inset:0 0 7px;width:100%;height:auto;min-height:0;background-position:center bottom;background-size:contain;background-repeat:no-repeat}
 .idle-arena .unit.size-2 .portrait{inset:-1% -1% 8px}
 .idle-arena .unit.size-3 .portrait{inset:-1% -1% 10px}
+.idle-arena .unit.size-4 .portrait,.idle-arena .unit.size-5 .portrait{inset:-2% -2% 12px}
 .idle-arena .unit .unit-info{position:absolute;inset:auto 0 0;width:100%;height:8px;padding:0}
 .idle-arena .unit .unit-health{top:auto;bottom:1px;width:90%;height:6px}
 .idle-arena .unit.size-2 .unit-health,.idle-arena .unit.size-3 .unit-health{height:7px}
+.idle-arena .unit.size-4 .unit-health,.idle-arena .unit.size-5 .unit-health{height:9px}
 .cell.covered{background:transparent}
 
 /* 發光 BOSS 標籤 */
@@ -334,6 +346,7 @@ body.map-rift .obstacle-icon{background-image:url('../assets/terrain/rock-rift.p
 @keyframes impact-pop{0%{opacity:0;transform:scale(.4) rotate(-8deg)}30%{opacity:1;transform:scale(1.12) rotate(2deg)}100%{opacity:0;transform:scale(1.3)}}
 
 .star-row{color:#ffd36a;font-size:.85rem;letter-spacing:.08em}
+.turn-order{display:none!important}
 
 /* 全名冊方向動畫：4 欄 × 6 列（右待機／移動／攻擊、左待機／移動／攻擊）。 */
 .unit.motion-sprite .portrait{background-image:var(--motion-sheet)!important;background-size:400% 600%!important;background-repeat:no-repeat!important}
@@ -349,9 +362,58 @@ body.map-rift .obstacle-icon{background-image:url('../assets/terrain/rock-rift.p
 @keyframes motion-idle-left{0%,24.9%{background-position:0 60%}25%,49.9%{background-position:33.333% 60%}50%,74.9%{background-position:66.667% 60%}75%,100%{background-position:100% 60%}}
 @keyframes motion-walk-left{0%,24.9%{background-position:0 80%}25%,49.9%{background-position:33.333% 80%}50%,74.9%{background-position:66.667% 80%}75%,100%{background-position:100% 80%}}
 @keyframes motion-attack-left{0%,24.9%{background-position:0 100%}25%,49.9%{background-position:33.333% 100%}50%,74.9%{background-position:66.667% 100%}75%,100%{background-position:100% 100%}}
+.unit.motion-sprite.motion-4dir .portrait{background-size:calc(var(--motion-columns,6)*100%) 1200%!important}
+.unit.motion-sprite.motion-4dir.facing-down .portrait{animation:motion-4dir-idle-down calc(var(--idle-duration,750ms)*var(--battle-rate,1)) steps(var(--idle-steps,5),end) var(--idle-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-down.walking .portrait{animation:motion-4dir-walk-down calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,5),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-down.cast .portrait{animation:motion-4dir-attack-down calc(var(--attack-duration,430ms)*var(--battle-rate,1)) steps(var(--attack-steps,5),end) var(--attack-iteration,1) both!important}
+.unit.motion-sprite.motion-4dir.facing-right .portrait{animation:motion-4dir-idle-right calc(var(--idle-duration,750ms)*var(--battle-rate,1)) steps(var(--idle-steps,5),end) var(--idle-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-right.walking .portrait{animation:motion-4dir-walk-right calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,5),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-right.cast .portrait{animation:motion-4dir-attack-right calc(var(--attack-duration,430ms)*var(--battle-rate,1)) steps(var(--attack-steps,5),end) var(--attack-iteration,1) both!important}
+.unit.motion-sprite.motion-4dir.facing-up .portrait{animation:motion-4dir-idle-up calc(var(--idle-duration,750ms)*var(--battle-rate,1)) steps(var(--idle-steps,5),end) var(--idle-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-up.walking .portrait{animation:motion-4dir-walk-up calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,5),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-up.cast .portrait{animation:motion-4dir-attack-up calc(var(--attack-duration,430ms)*var(--battle-rate,1)) steps(var(--attack-steps,5),end) var(--attack-iteration,1) both!important}
+.unit.motion-sprite.motion-4dir.facing-left .portrait{animation:motion-4dir-idle-left calc(var(--idle-duration,750ms)*var(--battle-rate,1)) steps(var(--idle-steps,5),end) var(--idle-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-left.walking .portrait{animation:motion-4dir-walk-left calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,5),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-left.cast .portrait{animation:motion-4dir-attack-left calc(var(--attack-duration,430ms)*var(--battle-rate,1)) steps(var(--attack-steps,5),end) var(--attack-iteration,1) both!important}
+@keyframes motion-4dir-idle-down{from{background-position:0 0}to{background-position:var(--idle-end-x,100%) 0}}
+@keyframes motion-4dir-walk-down{from{background-position:0 9.091%}to{background-position:var(--move-end-x,100%) 9.091%}}
+@keyframes motion-4dir-attack-down{from{background-position:0 18.182%}to{background-position:var(--attack-end-x,100%) 18.182%}}
+@keyframes motion-4dir-idle-right{from{background-position:0 27.273%}to{background-position:var(--idle-end-x,100%) 27.273%}}
+@keyframes motion-4dir-walk-right{from{background-position:0 36.364%}to{background-position:var(--move-end-x,100%) 36.364%}}
+@keyframes motion-4dir-attack-right{from{background-position:0 45.455%}to{background-position:var(--attack-end-x,100%) 45.455%}}
+@keyframes motion-4dir-idle-up{from{background-position:0 54.545%}to{background-position:var(--idle-end-x,100%) 54.545%}}
+@keyframes motion-4dir-walk-up{from{background-position:0 63.636%}to{background-position:var(--move-end-x,100%) 63.636%}}
+@keyframes motion-4dir-attack-up{from{background-position:0 72.727%}to{background-position:var(--attack-end-x,100%) 72.727%}}
+@keyframes motion-4dir-idle-left{from{background-position:0 81.818%}to{background-position:var(--idle-end-x,100%) 81.818%}}
+@keyframes motion-4dir-walk-left{from{background-position:0 90.909%}to{background-position:var(--move-end-x,100%) 90.909%}}
+@keyframes motion-4dir-attack-left{from{background-position:0 100%}to{background-position:var(--attack-end-x,100%) 100%}}
+.unit.hit{animation-duration:calc(var(--hit-duration,.5s)*var(--battle-rate,1))!important;animation-timing-function:steps(var(--hit-steps,5),end)!important}.unit.defeated{animation-duration:calc(var(--death-duration,.7s)*var(--battle-rate,1))!important}.vfx{animation-duration:calc(var(--vfx-duration,572ms)*var(--battle-rate,1))!important;animation-timing-function:steps(var(--vfx-frames,8),end)!important}
+
+/* Atlas rows are semantic rather than hard-coded: every direction can use its
+   authored idle/move/attack/hit/victory/death frame sequence. */
+.unit.motion-sprite.motion-4dir .portrait{background-size:calc(var(--motion-columns,8)*100%) calc(var(--motion-rows,24)*100%)!important}
+.unit.motion-sprite.motion-4dir.facing-down .portrait{--motion-row-y:var(--idle-down-y)}.unit.motion-sprite.motion-4dir.facing-right .portrait{--motion-row-y:var(--idle-right-y)}.unit.motion-sprite.motion-4dir.facing-up .portrait{--motion-row-y:var(--idle-up-y)}.unit.motion-sprite.motion-4dir.facing-left .portrait{--motion-row-y:var(--idle-left-y)}
+.unit.motion-sprite.motion-4dir.facing-down.walking .portrait{--motion-row-y:var(--move-down-y);animation:motion-4dir-row calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,7),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-right.walking .portrait{--motion-row-y:var(--move-right-y);animation:motion-4dir-row calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,7),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-up.walking .portrait{--motion-row-y:var(--move-up-y);animation:motion-4dir-row calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,7),end) var(--move-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.facing-left.walking .portrait{--motion-row-y:var(--move-left-y);animation:motion-4dir-row calc(var(--move-duration,500ms)*var(--battle-rate,1)) steps(var(--move-steps,7),end) var(--move-iteration,infinite)!important}
+.unit.motion-sprite.motion-4dir.facing-down.cast .portrait{--motion-row-y:var(--attack-down-y)}.unit.motion-sprite.motion-4dir.facing-right.cast .portrait{--motion-row-y:var(--attack-right-y)}.unit.motion-sprite.motion-4dir.facing-up.cast .portrait{--motion-row-y:var(--attack-up-y)}.unit.motion-sprite.motion-4dir.facing-left.cast .portrait{--motion-row-y:var(--attack-left-y)}
+.unit.motion-sprite.motion-4dir.facing-down.hit .portrait{--motion-row-y:var(--hit-down-y)}.unit.motion-sprite.motion-4dir.facing-right.hit .portrait{--motion-row-y:var(--hit-right-y)}.unit.motion-sprite.motion-4dir.facing-up.hit .portrait{--motion-row-y:var(--hit-up-y)}.unit.motion-sprite.motion-4dir.facing-left.hit .portrait{--motion-row-y:var(--hit-left-y)}
+.unit.motion-sprite.motion-4dir.facing-down.victorious .portrait{--motion-row-y:var(--victory-down-y)}.unit.motion-sprite.motion-4dir.facing-right.victorious .portrait{--motion-row-y:var(--victory-right-y)}.unit.motion-sprite.motion-4dir.facing-up.victorious .portrait{--motion-row-y:var(--victory-up-y)}.unit.motion-sprite.motion-4dir.facing-left.victorious .portrait{--motion-row-y:var(--victory-left-y)}
+.unit.motion-sprite.motion-4dir.facing-down.defeated .portrait{--motion-row-y:var(--death-down-y)}.unit.motion-sprite.motion-4dir.facing-right.defeated .portrait{--motion-row-y:var(--death-right-y)}.unit.motion-sprite.motion-4dir.facing-up.defeated .portrait{--motion-row-y:var(--death-up-y)}.unit.motion-sprite.motion-4dir.facing-left.defeated .portrait{--motion-row-y:var(--death-left-y)}
+.unit.motion-sprite.motion-4dir .portrait{animation:motion-4dir-row calc(var(--idle-duration,1000ms)*var(--battle-rate,1)) steps(var(--idle-steps,7),end) var(--idle-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.cast .portrait{animation:motion-4dir-row calc(var(--attack-duration,572ms)*var(--battle-rate,1)) steps(var(--attack-steps,7),end) var(--attack-iteration,1) both!important}.unit.motion-sprite.motion-4dir.hit .portrait{animation:motion-4dir-row calc(var(--hit-duration,500ms)*var(--battle-rate,1)) steps(var(--hit-steps,7),end) var(--hit-iteration,1) both!important}.unit.motion-sprite.motion-4dir.victorious .portrait{animation:motion-4dir-row calc(var(--victory-duration,1000ms)*var(--battle-rate,1)) steps(var(--victory-steps,7),end) var(--victory-iteration,infinite)!important}.unit.motion-sprite.motion-4dir.defeated .portrait{animation:motion-4dir-row calc(var(--death-duration,667ms)*var(--battle-rate,1)) steps(var(--death-steps,7),end) var(--death-iteration,1) both!important}
+@keyframes motion-4dir-row{from{background-position:0 var(--motion-row-y,0%)}to{background-position:var(--idle-end-x,100%) var(--motion-row-y,0%)}}
+.unit.motion-sprite.motion-4dir.facing-down .portrait,.unit.motion-sprite.motion-4dir.facing-right .portrait,.unit.motion-sprite.motion-4dir.facing-up .portrait,.unit.motion-sprite.motion-4dir.facing-left .portrait{animation:motion-4dir-row calc(var(--idle-duration,1000ms)*var(--battle-rate,1)) steps(var(--idle-steps,7),end) var(--idle-iteration,infinite)!important}
+.unit.motion-sprite.motion-4dir.facing-down.cast .portrait,.unit.motion-sprite.motion-4dir.facing-right.cast .portrait,.unit.motion-sprite.motion-4dir.facing-up.cast .portrait,.unit.motion-sprite.motion-4dir.facing-left.cast .portrait{animation:motion-4dir-row calc(var(--attack-duration,572ms)*var(--battle-rate,1)) steps(var(--attack-steps,7),end) var(--attack-iteration,1) both!important}
+.unit.motion-sprite.motion-4dir.walking .portrait{--idle-end-x:var(--move-end-x,100%)}.unit.motion-sprite.motion-4dir.cast .portrait{--idle-end-x:var(--attack-end-x,100%)}.unit.motion-sprite.motion-4dir.hit .portrait{--idle-end-x:var(--hit-end-x,100%)}.unit.motion-sprite.motion-4dir.victorious .portrait{--idle-end-x:var(--victory-end-x,100%)}.unit.motion-sprite.motion-4dir.defeated .portrait{--idle-end-x:var(--death-end-x,100%)}
 
 /* 25×25 whole-map layer: grids are transparent interaction overlays, not repeated terrain tiles. */
 .idle-arena .board{position:relative;isolation:isolate;background-size:cover;background-image:radial-gradient(ellipse at 24% 73%,#6a945455 0 16%,transparent 17%),radial-gradient(ellipse at 75% 24%,#345d3555 0 19%,transparent 20%),linear-gradient(135deg,#425f38,#273d29 52%,#52653d)}
 .idle-arena .board .cell{background:transparent!important;border-color:#ffffff0d!important}.idle-arena .board[data-map-kind$="-boss"]{background-image:radial-gradient(circle at 68% 48%,#ff9b4555 0 11%,transparent 12%),repeating-radial-gradient(circle at 65% 50%,#ffffff0a 0 2px,transparent 3px 42px),linear-gradient(135deg,#482e25,#24191c 56%,#56352b)}.idle-arena .board[data-map-kind$="-hard"]{background-image:linear-gradient(115deg,transparent 0 41%,#b44c4e55 42% 48%,transparent 49%),radial-gradient(ellipse at 75% 28%,#70533b88 0 14%,transparent 15%),linear-gradient(135deg,#342b45,#202333 57%,#493b4f)}
 .cell .terrain-hint{display:grid!important;place-items:center!important;width:1.55em!important;height:1.55em!important;inset:auto 8% 8% auto!important;border-radius:50%;background:#07131bd9!important;border:1px solid #ffffff5c!important;box-shadow:0 2px 5px #0009;font-size:calc(var(--cell)*.27)!important;font-weight:900;opacity:1!important}.cell .terrain-hint-water{color:#a9e9ff}.cell .terrain-hint-fire{color:#ffd09a}.cell .terrain-hint-forest{color:#d6f5a8}.cell.obstacle{background:#10111770!important;box-shadow:inset 0 0 0 1px #ffffff22!important}.cell.obstacle .obstacle-icon{background:none!important;display:grid!important;place-items:center!important;inset:8%!important;border:1px solid #ffdbab99;border-radius:7px;color:transparent!important;font-size:calc(var(--cell)*.19)!important;font-weight:900;filter:none!important}.cell.obstacle .obstacle-icon::after{content:'禁行';color:#ffe2b4;font-size:inherit}
 .cell .terrain-hint{width:1.05em!important;height:1.05em!important;inset:auto 7% 7% auto!important;background:#06111a99!important;border-color:#ffffff38!important;box-shadow:0 1px 3px #0007!important;font-size:calc(var(--cell)*.19)!important;opacity:.72!important}.cell.obstacle{background:#10111740!important;box-shadow:none!important}.cell.obstacle .obstacle-icon{inset:auto 8% 8% auto!important;width:1.05em!important;height:1.05em!important;border:0!important;border-radius:50%!important;background:#190b0b88!important;font-size:calc(var(--cell)*.17)!important;opacity:.62!important}.cell.obstacle .obstacle-icon::after{content:'⛔';color:#ffd7c1!important}
+
+/* Adaptive terrain readability must stay last: this file is the final stylesheet. */
+.cell .terrain-hint{opacity:.25!important}
+.cell.terrain-fire .terrain-hint,.cell.obstacle .obstacle-icon{opacity:.55!important}
+.cell.terrain-relevant .terrain-hint,.board.show-terrain .terrain-hint{opacity:.9!important;transform:scale(1.08)}
+.board.show-terrain .cell.obstacle .obstacle-icon{opacity:.9!important}
+
+/* V0.24 central manual command palette */
+.battle-command{position:fixed;z-index:90;left:50%;bottom:max(18px,calc(12px + env(safe-area-inset-bottom)));translate:-50% 0;width:min(720px,calc(100vw - 28px));display:grid;grid-template-columns:150px 1fr;gap:16px;padding:15px 18px;border:2px solid #d7a54c;border-radius:14px;background:linear-gradient(145deg,#2b1a17f5,#101827f5 62%,#17243af5);box-shadow:0 20px 70px #000d,0 0 0 3px #25140d;backdrop-filter:blur(12px)}
+.battle-command[hidden]{display:none}.battle-command-close{position:absolute;right:9px;top:8px;width:34px;height:34px;padding:0;border:1px solid #765844;border-radius:50%;background:#241516;color:#ffe5bd;font-size:1.4rem}.battle-command-portrait{min-height:145px;background:center/contain no-repeat;filter:drop-shadow(0 8px 8px #000b)}.battle-command-main>small{color:#e8bd6d;font-weight:900;letter-spacing:.18em}.battle-command-main h2{margin:2px 38px 3px 0;color:#fff1ca}.battle-command-main p{margin:0 0 10px;color:#a9bdd6;font-size:.75rem}.battle-command-skills{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.battle-command-skill{position:relative;min-height:56px;padding:8px 10px;border:1px solid #527aa2;border-radius:9px;background:linear-gradient(145deg,#183653,#101d30);color:#edf6ff;text-align:left}.battle-command-skill b,.battle-command-skill small{display:block}.battle-command-skill small{margin-top:3px;color:#9fc3df;font-size:.67rem}.battle-command-skill.ready::after{content:'READY';position:absolute;right:7px;top:6px;color:#74efad;font-size:.57rem;font-weight:900}.battle-command-skill.cooling{opacity:.48}.battle-command-skill.active{border-color:#ffcf62;box-shadow:0 0 0 2px #ffc95344;background:linear-gradient(145deg,#65441d,#25344a)}.battle-command-actions{display:flex;gap:8px;margin-top:9px}.battle-command-actions button{flex:1;min-height:40px}.side-panel.detail #skill-buttons{display:none!important}
+.cell.slow-cell{background:repeating-linear-gradient(135deg,#181a2c55 0 5px,#5a456455 5px 10px)!important}.slow-icon{position:absolute;z-index:1;right:6%;bottom:6%;display:grid;place-items:center;width:1.15em;height:1.15em;border:1px solid #d1a8ff88;border-radius:50%;background:#241432cc;color:#e0bdff;font-size:calc(var(--cell)*.2);font-weight:900}.board.show-terrain .slow-icon{box-shadow:0 0 8px #c887ffcc}
+.battle-panel #skill-buttons{display:none!important}
+.unit.ally.action-complete .portrait{filter:grayscale(.88) saturate(.3) brightness(.42);opacity:.7}.unit.ally.action-complete:not(.active){filter:drop-shadow(1px 2px 1px #080606)}
+@media(max-width:650px){.battle-command{grid-template-columns:86px 1fr;gap:9px;padding:12px}.battle-command-portrait{min-height:100px}.battle-command-skills{grid-template-columns:1fr 1fr}.battle-command-skill{min-height:51px;padding:6px 8px}.battle-command-main h2{font-size:1.1rem}.battle-command-actions{display:grid;grid-template-columns:1fr 1fr}.battle-command-actions button:last-child{grid-column:1/-1}}
+.formation-preset-box{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px;padding:9px 11px;border:1px solid #4b6284;border-radius:8px;background:#111d31}.formation-preset-box>div{display:flex;flex-direction:column}.formation-preset-box b{color:#ffe09a}.formation-preset-box span{color:#9eb1ce;font-size:.7rem}.formation-preset-box button{width:auto;margin:0}
+.dex-passives{display:grid;gap:7px}.dex-passives article{padding:9px 10px;border-left:3px solid #ae7bdf;border-radius:6px;background:#171d35}.dex-passives b{color:#ead5ff}.dex-passives p{margin:3px 0 0;color:#b9c6dc;line-height:1.5}
